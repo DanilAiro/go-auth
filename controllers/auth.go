@@ -16,58 +16,84 @@ func GetTokens(c *gin.Context) {
 		return
 	}
 
-	var body struct {
-		GUID	string `json:"guid"`
-		Email	string `json:"e-mail"`
-		Ip		string
-	}
+	user := models.User{}
 
-	err = c.Bind(&body)
-	if err != nil || body.GUID == "" || body.Email == "" {
+	err = c.Bind(&user)
+	if err != nil || user.GUID == "" || user.Email == "" {
 		utils.ReadBodyError(c)
 		return
 	}
 
-	body.Ip = c.ClientIP()
+	user.Ip = c.ClientIP()
 
-	accessToken, err := utils.GenerateAccessToken(body.GUID, body.Ip)
-	if utils.GenerateTokenError(err, c) {
-		return
-	}
-
-	refreshToken, err := utils.GenerateRefreshToken(body.GUID, body.Ip)
-	if utils.GenerateTokenError(err, c) {
+	accessToken, refreshToken, err := utils.GenerateTokenPair(user.GUID, user.Ip)
+	if utils.DefaultError("Failed to generate token: ", err, c) {
 		return
 	}
 
 	refreshHash, err := utils.HashToken(refreshToken)
-	if utils.GenerateTokenError(err, c) {
+	if utils.DefaultError("Failed to generate token: ", err, c) {
 		return
 	}
+
+	user.RefreshToken = refreshHash
 	
-	user := models.User{
-		GUID: body.GUID, 
-		Email: body.Email, 
-		Ip: body.Ip, 
-		RefreshToken: refreshHash,
-	}
 	err = initializers.DB.Create(&user).Error
-	if utils.CreateUserError(err, c) {
+	if utils.DefaultError("Failed to create user: ", err, c) {
 		return
 	}
 
-	c.SetCookie("JwtAccess", accessToken + ":" + refreshToken, 3600, "/", "localhost", false, true)
+	c.SetCookie("JwtAccess", accessToken + ":" + refreshToken, 3600, "/", "", false, true)
 
-	c.JSON(http.StatusOK, "\"ACCESS GRANTED\"©DeusEx")
+	c.JSON(http.StatusOK, "'ACCESS GRANTED'©DeusEx")
 }
 
 func RefreshTokens(c *gin.Context) {
 	cookie, err := c.Cookie("JwtAccess")
-	if utils.CookieNotFoundError(err, c) {
+	if utils.DefaultError("Refresh token not found: ", err, c) {
 		return
 	}
 
-	s := strings.Split(cookie, ":")[1]
+	var user models.User
+	c.Bind(&user)
+	err = initializers.DB.First(&user, user.GUID).Error
+	if utils.DefaultError("Failed to find user: ", err, c) {
+		return
+	}
+	
+	tokenCookie := strings.Split(cookie, ":")
+	if len(tokenCookie) != 2 {
+		c.JSON(http.StatusBadRequest, "Cookie is not valid")
+		return
+	}
 
-	c.JSON(200, s)
+	if utils.ValidTokenError(tokenCookie[1], user.RefreshToken, c) {
+		return
+	}
+	
+	if user.Ip != c.ClientIP() {
+		user.Ip = c.ClientIP()
+		// send warning
+	}
+	
+	accessToken, refreshToken, err := utils.GenerateTokenPair(user.GUID, user.Ip)
+	if utils.DefaultError("Failed to generate token: ", err, c) {
+		return
+	}
+	
+	refreshHash, err := utils.HashToken(refreshToken)
+	if utils.DefaultError("Failed to generate token: ", err, c) {
+		return
+	}
+	
+	user.RefreshToken = refreshHash
+	
+	err = initializers.DB.Updates(&user).Error
+	if utils.DefaultError("Failed to update user: ", err, c) {
+		return
+	}
+	
+	c.SetCookie("JwtAccess", accessToken + ":" + refreshToken, 3600, "/", "", false, true)
+
+	c.JSON(http.StatusOK, "Access refreshed")
 }

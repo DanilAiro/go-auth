@@ -6,8 +6,8 @@ import (
 
 type User struct {
 	gorm.Model
-	GUID 			string `gorm:"not null;unique"`
-	Email 			string `gorm:"not null;unique"`
+	GUID 			string `gorm:"not null;unique" json:"guid"`
+	Email 			string `gorm:"not null;unique" json:"e-mail"`
 	Ip				string `gorm:"not null"`
 	RefreshToken	string `gorm:"not null;unique"`
 }

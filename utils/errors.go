@@ -12,10 +12,10 @@ func ReadBodyError(c *gin.Context) {
 	})
 }
 
-func GenerateTokenError(err error, c *gin.Context) bool {
+func DefaultError(text string, err error, c *gin.Context) bool {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to generate token: " + err.Error(),
+			"error": text + err.Error(),
 		})
 
 		return true
@@ -24,34 +24,10 @@ func GenerateTokenError(err error, c *gin.Context) bool {
 	return false
 }
 
-func HashTokenError(err error, c *gin.Context) bool {
-	if err != nil {
+func ValidTokenError(token, hash string, c *gin.Context) bool {
+	if !VerifyToken(token, hash) {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to hash token: " + err.Error(),
-		})
-
-		return true
-	}
-
-	return false
-}
-
-func CookieNotFoundError(err error, c *gin.Context) bool {
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Refresh token not found: " + err.Error(),
-		})
-
-		return true
-	}
-
-	return false
-}
-
-func CreateUserError(err error, c *gin.Context) bool {
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to create user: " + err.Error(),
+			"error": "Refresh token is not valid",
 		})
 
 		return true

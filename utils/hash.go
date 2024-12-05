@@ -4,8 +4,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var lim = 72
+
 func HashToken(token string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(token)[:72], bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(token)[:lim], bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
@@ -14,7 +16,7 @@ func HashToken(token string) (string, error) {
 }
 
 func VerifyToken(token, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(token))
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(token)[:lim])
 	
 	return err == nil
 }
