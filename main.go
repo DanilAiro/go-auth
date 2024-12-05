@@ -16,10 +16,9 @@ func init() {
  
 func main() {
 	router := gin.Default()
-	authG := router.Group("/api")
 
-	authG.POST("/token", controllers.GetTokens)
-	authG.POST("/token/refresh", controllers.RefreshTokens)
+	router.POST("/tokens", controllers.GetTokens)
+	router.POST("/tokens/refresh", controllers.RefreshTokens)
 
 	router.Run(":" + os.Getenv("PORT"))
 }
