@@ -73,7 +73,8 @@ func RefreshTokens(c *gin.Context) {
 	
 	if user.Ip != c.ClientIP() {
 		user.Ip = c.ClientIP()
-		// send warning
+
+		utils.SendMail(user.Email, "Someone try to log in", "User data: " + user.Ip)
 	}
 	
 	accessToken, refreshToken, err := utils.GenerateTokenPair(user.GUID, user.Ip)
