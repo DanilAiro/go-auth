@@ -11,4 +11,10 @@ MAILPASS=   --пароль для использования почты стор
 ```
 Примечание: 
 - DB должен выглядеть в формате "\<host\> user=\<username\> password=\<password\> dbname=\<dbname\> port=\<port\> sslmode=\<sslmode\>"
-- MAILPASS это не пароль от почты, а специальны пароль для использования сторонними сервисами ([*Подробнее для mail.ru*](https://help.mail.ru/mail/security/protection/external/))
+- MAILPASS это не пароль от почты, а специальный пароль для использования сторонними сервисами ([*Подробнее для mail.ru*](https://help.mail.ru/mail/security/protection/external/))
+
+## Для тестирования я использовал
+
+- [aiven.io](aiven.io) - для поднятия бесплатной бызы данных PostgreSQL
+- [Postman](postman.com) - для тестирования API запросов
+- [TablePlus](tableplus.com) - для зваимодействия с базой данных
